@@ -3,20 +3,16 @@ import time
 from instruments.DP821A import *
 from pi22_lib import *
 from instruments.instruments_name import *
-from excel.excel_api import *
 import numpy as np
 
-# pBdg = hid.device()  # create hid device
-# pBdg.open(0x1A86, 0xFE07)
-# pAddr = 0x80
 
-smuid = smu_2450_id
+smuid = smu_2460_id
 dmmid = dmm_9060_num14_id
 powerid = DP821A_id
 dmmid2 = dmm_34461_num1_id
 
 
-def buck_load(sheet0,load_current):
+def buck_load(load_current,row,file_path):
 
     smu = SmuKeithley2450(pyvisa.ResourceManager(), smuid)  # SMU LOAD BUCK_OUTPUT
     dmm = DmmGwinstek9061(pyvisa.ResourceManager(), dmmid) # 9060 Vref
@@ -29,7 +25,7 @@ def buck_load(sheet0,load_current):
 
 
     # smu.sum2450_force_cur_sens_volt_init(-0.1, 5,1, 5, 0.1) # 初始化 手动初始化比较好
-    smu.smu_sour_ii(-i,1) # 提供电流 1是能提供的最大电流
+    smu.smu_sour_ii(-i,2) # 提供电流 1是能提供的最大电流
     time.sleep(0.1) # 延迟等待负载稳定
 
     buck_output = smu.smu_2450_meas_v(1) # 测量电压 四线
@@ -44,12 +40,17 @@ def buck_load(sheet0,load_current):
     time.sleep(0.1)  # 延迟等待负载稳定
 
 
-    # write(sheet, '张三', '李四', '王五')
-    data_insert(sheet0, buck_output, 1) # Buck Output
-    data_insert(sheet0, load, 2) # Load
-    data_insert(sheet0, power_voltage, 3) # Power Voltage
-    data_insert(sheet0, power_current, 4) # Power Current
-    data_insert(sheet0, vref, 5) # Vref
+    ins_xls_ = Xls_File(file_path)
+    ins_xls_.xls_open()
+
+    column = ins_xls_.xls_append_column()
+    ins_xls_.xls_write(row, column, buck_output)
+    ins_xls_.xls_write(row+1, column, load)
+    ins_xls_.xls_write(row+2, column, power_voltage)
+    ins_xls_.xls_write(row+3, column, power_current)
+    ins_xls_.xls_write(row+4, column, vref)
+
+    ins_xls_.xls_close()
 
 
 #_________________________________________________________________________________________________
@@ -63,61 +64,30 @@ def buck_load(sheet0,load_current):
     5. 开始写代码
     """
 
-def buck_efficiency_sweep():
+def buck_efficiency_sweep(row,filepath):
     """
-    1. 打开电源
-    2. SMU设置为 强制电流测电压
-    3. 运行代码
-
+    1. 打开感测
     """
     power = Power_DP821A(pyvisa.ResourceManager(), powerid)  # Power Power_voltage
+    power.set_volta_current(1,3.3,1)
+    power.set_volta_current(2,3.3,2)
     power.turn_on_off(1,"ON")
     power.turn_on_off(2, "ON")
 
     smu = SmuKeithley2450(pyvisa.ResourceManager(), smuid)  # SMU LOAD BUCK_OUTPUT
-    smu.sum2450_force_cur_sens_volt_init(-0.1, 5, 1, 5, 0.1)  # 初始化 手动初始化比较好
-
-    pi22_chipid()
-    pi22_unlock()  # 只有解锁了才能trim buck frequency
-
-    # pi22_i2c_write(pBdg, pAddr, 0x21, 0x02, 0x008C)  # Trim fre to 2.2M
-    pi22_i2c_write(pBdg, pAddr, 0x21, 0x02, 0x0780)  # Trim fre to 3.9062M
-
-    smu.smu_off()
-    time.sleep(1)
-
-    buck_cfg(1)  # 打开Buck
-    buck_vest(0x0A80)  # 1.8V
-
-    time.sleep(1)
-    smu.smu_on()
-
-    """上面是仪器操作,下面是Excel表格操作"""
-
-    filepath = "results/Buck_4M.xlsx"
-    app, wb = initialize_excel(filepath)
-    sheet = wb.sheets[0]
-
-    for i in np.arange(0, 0.85, 0.05):
-        buck_load(sheet,i)
-
-    finalize_excel(app, wb, filepath)
-
-if __name__ == "__main__":
-    """
-    1. 打开电源
-    2. SMU设置为 强制电流测电压
-    3. 打开感测
-    3. 运行代码
-    """
-    smu = SmuKeithley2450(pyvisa.ResourceManager(), smuid)  # SMU LOAD BUCK_OUTPUT
-    # smu.sum2450_force_cur_sens_volt_init(-0.1, 5, 1, 5, 0.1)  # 初始化 手动初始化比较好
+    smu.smu2450_reset()
+    smu.sum2450_force_cur_sens_volt_init(0, 5, 2, 5, 0.1)  # 初始化 手动初始化比较好
 
     pi22_chipid()
     pi22_unlock() # 只有解锁了才能trim buck frequency
 
-    # pi22_i2c_write(pBdg, pAddr, 0x21, 0x02, 0x008C)  # Trim fre to 2.2M
-    pi22_i2c_write(pBdg, pAddr, 0x21, 0x02, 0x0780)  # Trim fre to 3.9062M
+    # pi22_i2c_write(pBdg, pAddr, 0x21, 0x02, 0x08FC)  # Trim fre to  1.7MHZ
+
+    # pi22_i2c_write(pBdg, pAddr, 0x21, 0x02, 0x00F0)  # Trim fre to ?M
+    # pi22_i2c_write(pBdg, pAddr, 0x21, 0x02, 0x00FC)  # Trim fre to 2.2M
+
+    pi22_i2c_write(pBdg, pAddr, 0x21, 0x02, 0x008C)  # Trim fre to 2.2M
+    # pi22_i2c_write(pBdg, pAddr, 0x21, 0x02, 0x0780)  # Trim fre to 3.9062M
 
     # pi22_i2c_write(pBdg, pAddr, 0x21, 0x02, 0x000C)  # Trim fre to 2.2M
     # pi22_i2c_write(pBdg, pAddr, 0x21, 0x02, 0x0700)  # Trim fre to 3.9062M
@@ -138,15 +108,17 @@ if __name__ == "__main__":
 
     """上面是仪器操作,下面是Excel表格操作"""
 
-    filepath = "results/Buck_4M7.xlsx"
-    app, wb = initialize_excel(filepath)
-    sheet = wb.sheets[0]
 
-    for i in np.arange(0,0.9,0.1):
-        buck_load(sheet,i)
+    for i in np.arange(0,1.55,0.05):
+        buck_load(i,row,filepath)
 
+    power.turn_on_off(1,"OFF")
+    power.turn_on_off(2, "OFF")
+    smu.smu2450_reset()
+    smu.smu_off()
 
-    finalize_excel(app, wb, filepath)
+if __name__ == "__main__":
+    buck_efficiency_sweep(40, "../Load_regulation/Buck_load_regulation.xlsx")
 
 
 

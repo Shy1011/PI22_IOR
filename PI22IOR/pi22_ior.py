@@ -18,11 +18,14 @@ if __name__ == "__main__":
     # pi22_i2c_write(pBdg, pAddr, 0x21, 0x02, 0x0380) # Trim fre to 3M
     # pi22_i2c_write(pBdg, pAddr, 0x21, 0x02, 0x018C)  # Trim fre to 2.4M
     # pi22_i2c_write(pBdg, pAddr, 0x21, 0x02, 0x008C)  # Trim fre to 2.2M
-
+    # pi22_i2c_write(pBdg, pAddr, 0x21, 0x02, 0x00F0)  # Trim fre to 2.9M
+    # pi22_i2c_write(pBdg, pAddr, 0x21, 0x02, 0x00FC)  # Trim fre to 2.2M
+    # pi22_i2c_write(pBdg, pAddr, 0x21, 0x02, 0x00F8)  # Trim fre to 2.5                                                                      M
+    # pi22_i2c_write(pBdg, pAddr, 0x21, 0x02, 0x08FC)  # Trim fre to  1.7MHZ                                                      M
 
 
     # PID
-    # pi22_i2c_write(pBdg, pAddr, 0x07, 0x07, 0x07F0)
+    # pi22_i2c_write(pBdg, pAddr, 0x07, 0x07, 0                                                                                                                                                                                                                                                   x07F0)
     # pi22_i2c_write(pBdg, pAddr, 0x07, 0x07, 0x038C) # 20 2M
     # pi22_i2c_write(pBdg, pAddr, 0x07, 0x07, 0x030C)  # Trim frequency to  2M
     # pi22_i2c_write(pBdg, pAddr, 0x07, 0x07, 0x0380)  # Trim frequency to  2M

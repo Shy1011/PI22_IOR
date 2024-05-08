@@ -53,14 +53,7 @@ if __name__ == '__main__':
     ins_xls_ = Xls_File("../tset123.xlsx")
     ins_xls_.xls_open()
 
-    ins_xls_.xls_write(1, 1, 'a')
+    ins_xls_.xls_write(1, ins_xls_.xls_append_column(), 'a')
 
-    sheet_40 = ins_xls_.xls_create_sheet("sheet40")
-    ins_xls_.xls_active_sheet()
-    ins_xls_.xls_write(3, 3, 789)
-
-    sheet_125 = ins_xls_.xls_create_sheet("sheet125")
-    ins_xls_.xls_active_sheet()
-    ins_xls_.xls_write(1, 3, "log")
 
     ins_xls_.xls_close()
